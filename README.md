@@ -1,10 +1,13 @@
 # 2.3.4.4b-H5Nx-Highly-Pathogenic-Avian-Influenza in Europe
 
-**Introduction**
+**Introduction:**
+
 The highly pathogenic avian influenza (HPAI) H5Nx virus, part of the clade 2.3.4.4b of the Gs/GD lineage, has posed significant threats to poultry industries and public health across numerous countries since its emergence. These viruses keep evolving worldwide, with bird migration helping spread new strains, some of which may gain mutations that make them more infectious to mammals. Europe has been a key hub for the circulation of highly pathogenic avian influenza (HPAI) 2.3.4.4b H5Nx viruses since 2016, facilitating their spread from Southeast Asia and contributing to the first interhemispheric introduction into North America via the Atlantic route in late 2021. Environmental changes, such as shifts in temperature and precipitation due to global climate change, have further influenced viral dispersal by altering bird migratory patterns and host distributions, creating more opportunities for intercontinental viral movement. However, the influence of environmental and ecological factors on the spread of the virus during this outbreak remains understudied.
 
-**Objective**
+**Objective:**
+
 To explore the ecological, evolutionary, and host-related factors driving the spread of 2.3.4.4b H5Nx HPAI across Europe, including the impact of wild bird abundance, diversity, and migration timing; domestic bird farm density, type, size, proximity to wild birds, and biosecurity practices in EU farms; abiotic factors such as temperature, humidity, and rainfall; land use patterns including agriculture practices, forest cover, and wetland cover; anthropogenic factors like human movement; and economic factors such as poultry products trade data on viral transmission dynamics and adaptation.
 
-**Outcome**
+**Outcome:**
+
 This study will provide critical insights into the transmission routes, evolutionary patterns, and adaptation processes of 2.3.4.4b H5Nx HPAI as it spreads across species and geographic regions. By integrating genomic, host-species, and geographic data, we will uncover key drivers of viral evolution, such as host interactions, migration patterns, and environmental influences. This comprehensive understanding will reveal how the virus adapts to different hosts, highlighting potential genetic markers associated with increased transmissibility or virulence. Additionally, we will identify evolutionary bottlenecks and hotspots of viral diversity, aiding in the prediction of emerging variants and their potential impacts.
