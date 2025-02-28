@@ -1,0 +1,32 @@
+	<gmrfSkyGridLikelihood id="skygrid">
+		<populationSizes>
+
+			<!-- skygrid.logPopSize is in log units unlike other popSize                 -->
+			<parameter id="skygrid.logPopSize" dimension="50" value="1.0"/>
+		</populationSizes>
+		<precisionParameter>
+			<parameter id="skygrid.precision" value="0.1" lower="0.0"/>
+		</precisionParameter>
+		<numGridPoints>
+			<parameter id="skygrid.numGridPoints" value="49.0"/>
+		</numGridPoints>
+		<cutOff>
+			<parameter id="skygrid.cutOff" value="150.0"/>
+		</cutOff>
+		<populationTree>
+			<treeModel idref="treeModel"/>
+		</populationTree>
+	</gmrfSkyGridLikelihood>
+
+SKG1
+UCLD mean
+lognormal
+Initial: 0.001
+Mean: 0.0011478
+Stdv: 0.001
+Offset: 0.0
+
+Height
+Normal distribution
+Mean: 19.5 10M
+SD: 0.1

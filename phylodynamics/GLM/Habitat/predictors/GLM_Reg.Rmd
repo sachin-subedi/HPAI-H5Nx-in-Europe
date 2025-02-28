@@ -1,0 +1,562 @@
+---
+title: "GLM_Reg"
+author: "Sachin Subedi"
+date: "2024-11-03"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+working_directory <- "/Users/sachinsubedi/Library/CloudStorage/OneDrive-UniversityofGeorgia/EU_H5/GLM/GLM_reg"
+setwd("/Users/sachinsubedi/Library/CloudStorage/OneDrive-UniversityofGeorgia/EU_H5/GLM/GLM_reg")
+```
+
+```{r}
+# Load necessary libraries
+library(readxl)
+library(dplyr)
+
+# Load the data from the Excel file
+data <- read_excel("data_reg.xlsx")
+
+# Display column names to confirm the structure
+colnames(data)
+
+# Assuming that the 'Location' column contains country names
+# and there's a 'Region' column specifying the region for each country.
+
+# Group data by region and get the list of locations for each region
+locations_by_region <- data %>%
+  group_by(Regions) %>%
+  summarise(Location = paste(unique(Location), collapse = ", "))
+
+# Display the result
+print(locations_by_region)
+
+```
+```{r}
+# Load necessary libraries
+library(dplyr)
+library(readr)
+
+# Load the country data
+country_data <- read_tsv("Country_names.tsv", col_names = TRUE)
+
+# Define regions and their corresponding countries
+regions <- c("CA", "NC", "NE", "NW", "SC", "SE", "SW")
+region_countries <- list(
+  CA = c("Russia"),
+  NC = c("Germany", "CzechRepublic", "Poland", "Denmark", "Sweden", "Norway"),
+  NE = c("Finland", "Latvia", "Estonia"),
+  NW = c("Belgium", "Netherlands", "UnitedKingdom", "Ireland", "Iceland"),
+  SC = c("Hungary", "Croatia", "Italy", "Greece", "Slovenia", "Switzerland", "Austria", "Kosovo", "Slovakia"),
+  SE = c("Ukraine", "Macedonia", "Bulgaria", "Romania", "Serbia", "Moldova", "Cyprus"),
+  SW = c("France", "Spain", "Portugal")
+)
+
+# Define bordering countries as pairs
+bordering_countries <- list(
+  c("Russia", "Finland"), c("Spain", "Portugal"), c("Italy", "Switzerland"),
+  c("Italy", "France"), c("France", "Belgium"), c("France", "Germany"),
+  c("Germany", "Austria"), c("Germany", "Netherlands"), c("Austria", "Slovenia"),
+  c("Croatia", "Hungary"), c("Latvia", "Estonia"), c("Moldova", "Ukraine"),
+  c("Sweden", "Norway"), c("Greece", "Macedonia"), c("CzechRepublic", "Poland"),
+  c("Denmark", "Germany"), c("Switzerland", "France"), c("Ireland", "UnitedKingdom"),
+  c("Bulgaria", "Serbia"), c("Slovakia", "Austria")
+)
+
+# Create a mapping of each country to its region
+country_to_region <- unlist(lapply(names(region_countries), function(region) {
+  setNames(rep(region, length(region_countries[[region]])), region_countries[[region]])
+}))
+
+# Initialize a region border matrix (7x7, one row/column per region)
+num_regions <- length(regions)
+region_matrix <- matrix(0, nrow = num_regions, ncol = num_regions)
+colnames(region_matrix) <- regions
+rownames(region_matrix) <- regions
+
+# Set borders based on bordering countries
+for (pair in bordering_countries) {
+  country1 <- pair[1]
+  country2 <- pair[2]
+  
+  # Get the regions for the bordering countries
+  region1 <- country_to_region[country1]
+  region2 <- country_to_region[country2]
+  
+  # Only set borders between regions if they're different and not already set
+  if (!is.na(region1) && !is.na(region2) && region1 != region2) {
+    index1 <- which(colnames(region_matrix) == region1)
+    index2 <- which(colnames(region_matrix) == region2)
+    region_matrix[index1, index2] <- 1
+    region_matrix[index2, index1] <- 1
+  }
+}
+
+# Export the region-based border matrix as a TSV file
+write.table(region_matrix, "region_border_matrix.tsv", sep = "\t", row.names = TRUE, col.names = NA, quote = FALSE)
+
+# Display the region matrix for confirmation
+print(region_matrix)
+
+```
+
+```{r}
+library(dplyr)
+
+# Load the case data
+case_data <- read_csv("case_counts.csv")
+
+# List of target countries
+target_countries <- c("Russian Federation", "Finland", "Spain", "Italy", "Romania", "France", 
+                      "Netherlands", "U.K. of Great Britain and Northern Ireland", "Bulgaria", "Germany", "Sweden", 
+                      "Czech Republic", "Poland", "Belgium", "Austria", "Croatia", 
+                      "Latvia", "Hungary", "Estonia", "Moldova, Republic of", "Slovenia", "Denmark", 
+                      "Switzerland", "Ukraine", "Cyprus", "Serbia", "Slovakia", "Ireland", 
+                      "Kosovo", "Norway", "Greece", "Iceland", "North Macedonia", "Portugal")
+
+# Filter data for the specified countries
+filtered_data <- case_data %>%
+  filter(Country %in% target_countries)
+
+# Count occurrences by country in filtered data
+country_counts <- filtered_data %>%
+  count(Country, name = "count")
+
+# Convert target_countries list to a data frame
+target_countries_df <- data.frame(Country = target_countries)
+
+# Join target countries with country counts, filling missing counts with zero
+final_counts <- target_countries_df %>%
+  left_join(country_counts, by = "Country") %>%
+  mutate(case_count = ifelse(is.na(count), 0, count)) %>%
+  select(-count) %>%  # Remove the original count column
+  arrange(Country)  # Sort alphabetically
+
+# Update country names to match the desired format
+final_counts <- final_counts %>%
+  mutate(Country = case_when(
+    Country == "Russian Federation" ~ "Russia",
+    Country == "U.K. of Great Britain and Northern Ireland" ~ "UnitedKingdom",
+    Country == "Czech Republic" ~ "CzechRepublic",
+    Country == "Moldova, Republic of" ~ "Moldova",
+    Country == "North Macedonia" ~ "Macedonia",
+    TRUE ~ Country
+  ))
+
+# Define regions and their corresponding countries
+region_countries <- list(
+  CA = c("Russia"),
+  NC = c("Germany", "CzechRepublic", "Poland", "Denmark", "Sweden", "Norway"),
+  NE = c("Finland", "Latvia", "Estonia"),
+  NW = c("Belgium", "Netherlands", "UnitedKingdom", "Ireland", "Iceland"),
+  SC = c("Hungary", "Croatia", "Italy", "Greece", "Slovenia", "Switzerland", "Austria", "Kosovo", "Slovakia"),
+  SE = c("Ukraine", "Macedonia", "Bulgaria", "Romania", "Serbia", "Moldova", "Cyprus"),
+  SW = c("France", "Spain", "Portugal")
+)
+
+# Convert region_countries list to a data frame for easy lookup
+country_to_region <- stack(region_countries)
+colnames(country_to_region) <- c("Country", "Regions")
+
+# Add the Region column to final_counts by joining with country_to_region
+final_counts <- final_counts %>%
+  left_join(country_to_region, by = "Country")
+
+# Aggregate case counts by region
+region_counts <- final_counts %>%
+  group_by(Regions) %>%
+  summarise(case_count = sum(case_count, na.rm = TRUE)) %>%
+  arrange(Regions)
+
+# Display the final region-wise counts
+print(region_counts)
+
+# Export the region-wise counts as a TSV file
+write.table(region_counts, "region_case_counts.tsv", sep = "\t", row.names = FALSE, quote = FALSE)
+
+```
+# Laridae
+```{r}
+library(dplyr)
+library(geosphere)
+library(readr)
+
+# Load the data
+path <- "//Users/sachinsubedi/Library/CloudStorage/OneDrive-UniversityofGeorgia/EU_H5/GLM/wb/filtered_data_combined_Laridae.csv"
+Laridae <- read_csv(path, col_types = cols(
+  startDayOfYear = col_double(),
+  individualCount = col_double(),
+  decimalLatitude = col_double(),
+  decimalLongitude = col_double(),
+  family = col_character(),
+  genus = col_character(),
+  scientificName = col_character()
+))
+
+# Define tolerance and filter data
+tolerance <- 0.1
+Laridae1 <- Laridae %>%
+  rowwise() %>%
+  filter(any(abs(decimalLatitude - locations$Latitude) <= tolerance & 
+               abs(decimalLongitude - locations$Longitude) <= tolerance)) %>%
+  ungroup()
+
+# Function to find the closest location
+find_closest_location <- function(lat, lon, locations) {
+  distances <- distHaversine(matrix(c(lon, lat), nrow = 1), 
+                             as.matrix(locations[, c("Longitude", "Latitude")]))
+  closest_index <- which.min(distances)
+  locations$Location[closest_index]
+}
+
+Laridae1 <- Laridae1 %>%
+  mutate(Location = mapply(find_closest_location, decimalLatitude, decimalLongitude, 
+                           MoreArgs = list(locations = locations)))
+
+# List of all locations
+all_locations <- data.frame(
+  Location = c("Russia", "Finland", "Spain", "Italy", "Romania", "France", 
+               "Netherlands", "UnitedKingdom", "Bulgaria", "Germany", "Sweden", 
+               "CzechRepublic", "Poland", "Belgium", "Austria", "Croatia", 
+               "Latvia", "Hungary", "Estonia", "Moldova", "Slovenia", "Denmark", 
+               "Switzerland", "Ukraine", "Cyprus", "Serbia", "Slovakia", "Ireland", 
+               "Kosovo", "Norway", "Greece", "Iceland", "Macedonia", "Portugal")
+)
+
+# Calculate yearly sum for each location
+yearly_sums <- Laridae1 %>%
+  group_by(Location, year) %>%
+  summarise(yearly_sum_individualCount = sum(individualCount, na.rm = TRUE)) %>%
+  ungroup()
+
+# Calculate average of yearly sums for each location
+location_averages <- yearly_sums %>%
+  group_by(Location) %>%
+  summarise(Laridae_Count = mean(yearly_sum_individualCount, na.rm = TRUE)) %>%
+  ungroup()
+
+# Merge with all_locations to include all specified locations
+location_counts_complete <- all_locations %>%
+  left_join(location_averages, by = "Location") %>%
+  mutate(Laridae_Count = ifelse(is.na(Laridae_Count), 0, Laridae_Count)) %>%
+  arrange(Location)
+
+# Define regions and their corresponding countries
+region_countries <- list(
+  CA = c("Russia"),
+  NC = c("Germany", "CzechRepublic", "Poland", "Denmark", "Sweden", "Norway"),
+  NE = c("Finland", "Latvia", "Estonia"),
+  NW = c("Belgium", "Netherlands", "UnitedKingdom", "Ireland", "Iceland"),
+  SC = c("Hungary", "Croatia", "Italy", "Greece", "Slovenia", "Switzerland", "Austria", "Kosovo", "Slovakia"),
+  SE = c("Ukraine", "Macedonia", "Bulgaria", "Romania", "Serbia", "Moldova", "Cyprus"),
+  SW = c("France", "Spain", "Portugal")
+)
+
+# Convert region_countries list to a data frame for easy lookup
+country_to_region <- stack(region_countries)
+colnames(country_to_region) <- c("Country", "Region")
+
+# Add the Region column to location_counts_complete by joining with country_to_region
+location_counts_complete <- location_counts_complete %>%
+  left_join(country_to_region, by = c("Location" = "Country"))
+
+# Aggregate Laridae counts by region, replacing zero counts with 0.00001
+region_counts <- location_counts_complete %>%
+  group_by(Region) %>%
+  summarise(Laridae_Count = sum(Laridae_Count, na.rm = TRUE)) %>%
+  mutate(Laridae_Count = ifelse(Laridae_Count == 0, 0.00001, Laridae_Count)) %>%
+  arrange(Region)
+
+# Display the final region-wise counts
+print(region_counts)
+
+# Export the region-wise counts as a TSV file
+write.table(region_counts, "Laridae_region_counts.tsv", sep = "\t", row.names = FALSE, quote = FALSE)
+
+```
+# Anatidae
+```{r}
+library(dplyr)
+library(geosphere)
+library(readr)
+
+# Load the data
+path <- "//Users/sachinsubedi/Library/CloudStorage/OneDrive-UniversityofGeorgia/EU_H5/GLM/wb/filtered_data_combined_Anatidae.csv"
+Anatidae <- read_csv(path, col_types = cols(
+  startDayOfYear = col_double(),
+  individualCount = col_double(),
+  decimalLatitude = col_double(),
+  decimalLongitude = col_double(),
+  family = col_character(),
+  genus = col_character(),
+  scientificName = col_character()
+))
+
+# Define tolerance and filter data
+tolerance <- 0.1
+Anatidae1 <- Anatidae %>%
+  rowwise() %>%
+  filter(any(abs(decimalLatitude - locations$Latitude) <= tolerance & 
+               abs(decimalLongitude - locations$Longitude) <= tolerance)) %>%
+  ungroup()
+
+# Function to find the closest location
+find_closest_location <- function(lat, lon, locations) {
+  distances <- distHaversine(matrix(c(lon, lat), nrow = 1), 
+                             as.matrix(locations[, c("Longitude", "Latitude")]))
+  closest_index <- which.min(distances)
+  locations$Location[closest_index]
+}
+
+Anatidae1 <- Anatidae1 %>%
+  mutate(Location = mapply(find_closest_location, decimalLatitude, decimalLongitude, 
+                           MoreArgs = list(locations = locations)))
+
+# List of all locations
+all_locations <- data.frame(
+  Location = c("Russia", "Finland", "Spain", "Italy", "Romania", "France", 
+               "Netherlands", "UnitedKingdom", "Bulgaria", "Germany", "Sweden", 
+               "CzechRepublic", "Poland", "Belgium", "Austria", "Croatia", 
+               "Latvia", "Hungary", "Estonia", "Moldova", "Slovenia", "Denmark", 
+               "Switzerland", "Ukraine", "Cyprus", "Serbia", "Slovakia", "Ireland", 
+               "Kosovo", "Norway", "Greece", "Iceland", "Macedonia", "Portugal")
+)
+
+# Calculate yearly sum for each location
+yearly_sums <- Anatidae1 %>%
+  group_by(Location, year) %>%
+  summarise(yearly_sum_individualCount = sum(individualCount, na.rm = TRUE)) %>%
+  ungroup()
+
+# Calculate average of yearly sums for each location
+location_averages <- yearly_sums %>%
+  group_by(Location) %>%
+  summarise(Anatidae_Count = mean(yearly_sum_individualCount, na.rm = TRUE)) %>%
+  ungroup()
+
+# Merge with all_locations to include all specified locations
+location_counts_complete <- all_locations %>%
+  left_join(location_averages, by = "Location") %>%
+  mutate(Anatidae_Count = ifelse(is.na(Anatidae_Count), 0, Anatidae_Count)) %>%
+  arrange(Location)
+
+# Define regions and their corresponding countries
+region_countries <- list(
+  CA = c("Russia"),
+  NC = c("Germany", "CzechRepublic", "Poland", "Denmark", "Sweden", "Norway"),
+  NE = c("Finland", "Latvia", "Estonia"),
+  NW = c("Belgium", "Netherlands", "UnitedKingdom", "Ireland", "Iceland"),
+  SC = c("Hungary", "Croatia", "Italy", "Greece", "Slovenia", "Switzerland", "Austria", "Kosovo", "Slovakia"),
+  SE = c("Ukraine", "Macedonia", "Bulgaria", "Romania", "Serbia", "Moldova", "Cyprus"),
+  SW = c("France", "Spain", "Portugal")
+)
+
+# Convert region_countries list to a data frame for easy lookup
+country_to_region <- stack(region_countries)
+colnames(country_to_region) <- c("Country", "Region")
+
+# Add the Region column to location_counts_complete by joining with country_to_region
+location_counts_complete <- location_counts_complete %>%
+  left_join(country_to_region, by = c("Location" = "Country"))
+
+# Aggregate Anatidae counts by region, replacing zero counts with 0.00001
+region_counts <- location_counts_complete %>%
+  group_by(Region) %>%
+  summarise(Anatidae_Count = sum(Anatidae_Count, na.rm = TRUE)) %>%
+  mutate(Anatidae_Count = ifelse(Anatidae_Count == 0, 0.00001, Anatidae_Count)) %>%
+  arrange(Region)
+
+# Display the final region-wise counts
+print(region_counts)
+
+# Export the region-wise counts as a TSV file
+write.table(region_counts, "Anatidae_region_counts.tsv", sep = "\t", row.names = FALSE, quote = FALSE)
+```
+# Accipitridae
+```{r}
+library(dplyr)
+library(geosphere)
+library(readr)
+
+# Load the data
+path <- "//Users/sachinsubedi/Library/CloudStorage/OneDrive-UniversityofGeorgia/EU_H5/GLM/wb/filtered_data_combined_Accipitridae.csv"
+Accipitridae <- read_csv(path, col_types = cols(
+  startDayOfYear = col_double(),
+  individualCount = col_double(),
+  decimalLatitude = col_double(),
+  decimalLongitude = col_double(),
+  family = col_character(),
+  genus = col_character(),
+  scientificName = col_character()
+))
+
+# Define tolerance and filter data
+tolerance <- 0.1
+Accipitridae1 <- Accipitridae %>%
+  rowwise() %>%
+  filter(any(abs(decimalLatitude - locations$Latitude) <= tolerance & 
+               abs(decimalLongitude - locations$Longitude) <= tolerance)) %>%
+  ungroup()
+
+# Function to find the closest location
+find_closest_location <- function(lat, lon, locations) {
+  distances <- distHaversine(matrix(c(lon, lat), nrow = 1), 
+                             as.matrix(locations[, c("Longitude", "Latitude")]))
+  closest_index <- which.min(distances)
+  locations$Location[closest_index]
+}
+
+Accipitridae1 <- Accipitridae1 %>%
+  mutate(Location = mapply(find_closest_location, decimalLatitude, decimalLongitude, 
+                           MoreArgs = list(locations = locations)))
+
+# List of all locations
+all_locations <- data.frame(
+  Location = c("Russia", "Finland", "Spain", "Italy", "Romania", "France", 
+               "Netherlands", "UnitedKingdom", "Bulgaria", "Germany", "Sweden", 
+               "CzechRepublic", "Poland", "Belgium", "Austria", "Croatia", 
+               "Latvia", "Hungary", "Estonia", "Moldova", "Slovenia", "Denmark", 
+               "Switzerland", "Ukraine", "Cyprus", "Serbia", "Slovakia", "Ireland", 
+               "Kosovo", "Norway", "Greece", "Iceland", "Macedonia", "Portugal")
+)
+
+# Calculate yearly sum for each location
+yearly_sums <- Accipitridae1 %>%
+  group_by(Location, year) %>%
+  summarise(yearly_sum_individualCount = sum(individualCount, na.rm = TRUE)) %>%
+  ungroup()
+
+# Calculate average of yearly sums for each location
+location_averages <- yearly_sums %>%
+  group_by(Location) %>%
+  summarise(Accipitridae_Count = mean(yearly_sum_individualCount, na.rm = TRUE)) %>%
+  ungroup()
+
+# Merge with all_locations to include all specified locations
+location_counts_complete <- all_locations %>%
+  left_join(location_averages, by = "Location") %>%
+  mutate(Accipitridae_Count = ifelse(is.na(Accipitridae_Count), 0, Accipitridae_Count)) %>%
+  arrange(Location)
+
+# Define regions and their corresponding countries
+region_countries <- list(
+  CA = c("Russia"),
+  NC = c("Germany", "CzechRepublic", "Poland", "Denmark", "Sweden", "Norway"),
+  NE = c("Finland", "Latvia", "Estonia"),
+  NW = c("Belgium", "Netherlands", "UnitedKingdom", "Ireland", "Iceland"),
+  SC = c("Hungary", "Croatia", "Italy", "Greece", "Slovenia", "Switzerland", "Austria", "Kosovo", "Slovakia"),
+  SE = c("Ukraine", "Macedonia", "Bulgaria", "Romania", "Serbia", "Moldova", "Cyprus"),
+  SW = c("France", "Spain", "Portugal")
+)
+
+# Convert region_countries list to a data frame for easy lookup
+country_to_region <- stack(region_countries)
+colnames(country_to_region) <- c("Country", "Region")
+
+# Add the Region column to location_counts_complete by joining with country_to_region
+location_counts_complete <- location_counts_complete %>%
+  left_join(country_to_region, by = c("Location" = "Country"))
+
+# Aggregate Accipitridae counts by region, replacing zero counts with 0.00001
+region_counts <- location_counts_complete %>%
+  group_by(Region) %>%
+  summarise(Accipitridae_Count = sum(Accipitridae_Count, na.rm = TRUE)) %>%
+  mutate(Accipitridae_Count = ifelse(Accipitridae_Count == 0, 0.00001, Accipitridae_Count)) %>%
+  arrange(Region)
+
+# Display the final region-wise counts
+print(region_counts)
+
+# Export the region-wise counts as a TSV file
+write.table(region_counts, "Accipitridae_region_counts.tsv", sep = "\t", row.names = FALSE, quote = FALSE)
+
+```
+# Products
+
+```{r}
+library(dplyr)
+library(tidyr)
+library(readr)
+
+# Load data
+products <- read_csv("FAOSTAT_data_en_11-2-2024.csv")
+
+# Calculate average values by Area and Year
+average_values <- products %>%
+  group_by(`Area`, `Year`) %>%
+  summarise(avg_value = mean(Value, na.rm = TRUE)) %>%
+  ungroup()
+
+# Reshape the data to have countries as rows and years as columns
+average_values_wide <- average_values %>%
+  pivot_wider(names_from = `Year`, values_from = avg_value)
+
+# Calculate overall average values by Area
+country_averages <- products %>%
+  group_by(`Area`) %>%
+  summarise(avg_value = mean(Value, na.rm = TRUE)) %>%
+  ungroup()
+
+# Standardize country names
+country_averages <- country_averages %>%
+  mutate(Area = case_when(
+    Area == "Russian Federation" ~ "Russia",
+    Area == "Netherlands (Kingdom of the)" ~ "Netherlands",
+    Area == "United Kingdom of Great Britain and Northern Ireland" ~ "UnitedKingdom",
+    Area == "Czechia" ~ "CzechRepublic",
+    Area == "Republic of Moldova" ~ "Moldova",
+    Area == "North Macedonia" ~ "Macedonia",
+    TRUE ~ Area
+  ))
+
+# Define regions and their corresponding countries
+region_countries <- list(
+  CA = c("Russia"),
+  NC = c("Germany", "CzechRepublic", "Poland", "Denmark", "Sweden", "Norway"),
+  NE = c("Finland", "Latvia", "Estonia"),
+  NW = c("Belgium", "Netherlands", "UnitedKingdom", "Ireland", "Iceland"),
+  SC = c("Hungary", "Croatia", "Italy", "Greece", "Slovenia", "Switzerland", "Austria", "Kosovo", "Slovakia"),
+  SE = c("Ukraine", "Macedonia", "Bulgaria", "Romania", "Serbia", "Moldova", "Cyprus"),
+  SW = c("France", "Spain", "Portugal")
+)
+
+# Convert region_countries list to a data frame for easy lookup
+country_to_region <- stack(region_countries)
+colnames(country_to_region) <- c("Area", "Region")
+
+# Add Kosovo with NaN if it doesn't exist in the data
+if (!"Kosovo" %in% country_averages$Area) {
+  country_averages <- country_averages %>%
+    add_row(Area = "Kosovo", avg_value = 0)
+}
+
+# Merge country_averages with regions
+country_averages <- country_averages %>%
+  left_join(country_to_region, by = "Area")
+
+# Aggregate by region
+region_averages <- country_averages %>%
+  group_by(Region) %>%
+  summarise(Products = mean(avg_value, na.rm = TRUE)) %>%
+  ungroup()
+
+# Ensure all regions are included, even if they have no data
+all_regions <- data.frame(Region = names(region_countries))
+region_averages_complete <- all_regions %>%
+  left_join(region_averages, by = "Region") %>%
+  mutate(Products = ifelse(is.na(Products), 0.00001, Products)) %>%
+  arrange(Region)
+
+# Export the result as a TSV file
+write.table(region_averages_complete, "region_products.tsv", sep = "\t", row.names = FALSE, quote = FALSE)
+
+# Display the final result
+print(region_averages_complete)
+
+```
+

@@ -1,0 +1,62 @@
+Dabbling Duck
+Diving DUck
+Goose
+Swan
+Gull and tern
+Shorebird
+Passerine
+Raptors
+Seabird
+Wading bird
+Others
+
+
+Finlad domesti nad spain wild
+
+which Duck in Ecology means Dabbling or diving or poultry
+which wild bird means which any all classes
+which wild duck means Diving or dabbling
+
+Wild Mammal:
+FOx
+Polecat
+Badger
+Bear
+Bushdog
+Caracal
+Dolphin
+Ferret
+Fox
+Lynx
+Marten
+Mink
+Otter
+Polecat
+Porpoise
+Racoon dog
+Seal
+Walrus
+
+Ecology traits
+DBD = Dabbling ducks (Common SHelduck, Carolina DUck, Rudy Shelduck, Whistling Duck, Teal, Wigeon, Mallard, Gadwall)
+DVD = Diving Ducks (Coot, Grebe, Tufetd Duck, Steamer Duck, Eider, Pochard, Golden Eye, Buffle head duck, )
+ENV = Environment
+FC = Farmed Carnivore (Mink in Finland)
+GB = Groundbird (Pheasant, Fowl, Rhea)
+GS = Goose
+GT = Gull and Tern
+HH = Human
+MM = Marine Mammal (Dolphin, Porpoise)
+PO = Poultry
+PS = Passerine (Warbler, Sparrow, SongThrush, Rook, Raven, Pigeon, Magpie, Jay, Jackdaw, Dove, Crow)
+PT = Pet (Cat)
+RP = Raptors (Vultures, Sparrowhawk, Owl, Kestrel, Hawk, Harrier, Goshawk, Falcon, Eagle, Buzzard)
+SAC = Semi Aquatic Carnivore (Mink, Otter, Seal, Walrus)
+SEB = Seabird (Cormoront, Fulmar, Gannet, Murre, Pellican, Penguin, Razorbill, Shag, Skua)
+SHD = Shorebird (Common Snipe, Curlew, Lapwing, Oystercatcher, Sanderling, Sandpiper, Wader)
+SW = Swan
+WB = Wading birds (Crane, Egret, Flamingo, Heron, Moornehn, Spoonbill, Stork)
+WC = Wild Carnivore (Badger, Bear, Bushdog, Caracola, Ferret, Fox, Lynx, Marten, Polecat,Racoondog)
+WD = Which Duck
+WWB = Which Wild Bird
+WWD = Which Wild Duck

@@ -1,0 +1,19 @@
+827:
+slope : Slope (rate)	1.5325E-3
+X-Intercept (TMRCA)	2008.951
+SKG
+UCLD mean
+lognormal
+Initial: 0.003
+Mean: 0.0033
+Stdv: 0.001
+Offset: 0.0
+Height
+Normal distribution
+Mean: 16
+SD: 0.1
+
+1393:
+Slope (rate)	1.5645E-3
+X-Intercept (TMRCA)	2009.1832
+Same beast priors
